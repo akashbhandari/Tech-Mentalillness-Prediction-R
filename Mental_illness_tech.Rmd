@@ -1,0 +1,209 @@
+---
+title: "Mental_illness_tech"
+author: "Akash Bhandari"
+date: "5/21/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#Type of people that are inclined to mental illness in the tech industry.
+
+We often think of Silicon Valley as the place where people are very happy as it is the cradle of innovation and modern-day technologies. It’s a valley where most of the tech industries are centrally located and where an average software developers earns more than than $100k annually. Silicon valley or any other place in the tech industry is not just about building new technologies and earning a lot. It’s much more than that. Different researchers have found out that the employees at tech industries are mentally tired and have anxiety. Because of different factors, people are struggling to cope and are not happy as we thought they were. In Roni’s article, it is said that people do not feel that they have disorders but in reality are suffering from mental illness because of factors like long working hours with no breaks, isolation and work stress. People have to satisfy the needs and demands of their employers, co-founders and even founders because of which they do not talk about their mental issues with their peers or even medical personals. Also, it is mentioned that young employees (mostly below 30) in larger companies with more employees are more susceptible to mental illness. 
+
+Likewise, in Julia’s review, they talk about how people are not opening up about their experience with mental illness and anxiety with their co-workers. This factor leads an individual to be more ill mentally. Also, not going for treatment worsens the conditions. Similarly, it is also mentioned that if an employer supports the employees in seeking help, the illness plummets. Additionally In Jennifer M Threlfall’s article, the study investigated the association of between mental health problems and behavioural school functioning for adolescent girls(ages between 12 and 19). The review found out that higher levels of depression(39%) were significantly associated with more school functioning problems. This can be analogous to the higher level of workload in tech workplaces because of which people are dealing with mental illness. Therefore, from above peer reviewed articles and studies, I can infer that the independent variables like age, no_employee, coworkers, seek_help might be playing a significant role in knowing as to what type of employees are suffering from mental illness in tech industry. Likewise, I think that factors like family_history would also play a vital role in determining the type. All five of these are independent variables and my dependent variable would be treatment (with which I’ll find out the people who are mentally ill as they will go for treatment for a mental health condition).
+
+I referenced the dataset from Kaggle and there is a similar survey that started in 2016 and is ongoing. The dataset that I’ll be working with is from a 2014 survey which measures the attitudes towards mental health and frequency of mental health disorders in the tech workplace. In the dataset that I’ll be using, there are 27 variables and 1031 observations (excluding the people who do not work at the tech industry). I might also analyze the data from the 2016 survey. For the study, I will analyze the data in R. The first thing to do would be to analyze and explain the data provided by Kaggle with respect to the five variables(age, no_employee, coworkers, seek_help and family_history). After this, I’ll analyze the data to find trends and develop a predictive model. Finally, I’ll use R to illustrate the model and draw my conclusions as to what type of people suffer from mental illness at tech industries.
+#The End
+
+##Required packages
+```{r}
+library(dplyr)
+library(ggplot2)
+library(mosaic)
+library(mosaicData)
+```
+
+
+```{r}
+#Reading the file
+mental <- read.csv("survey.csv")
+
+head(mental)
+
+```
+
+
+```{r}
+#Taking only the people who work at tech companies from the tech_cmopany variable
+mental1 <- filter(mental, mental$tech_company == "Yes")
+
+#Taking people who have mental illness and have sought treatment for mental illness
+#mental2 <- filter(mental1, mental1$treatment == "Yes")
+
+#View(mental2)
+```
+
+
+```{r}
+#Making a new dataset only having the variables that I need
+mental <- data.frame(age = mental1$Age, gender = mental1$Gender, family_history = mental1$family_history, no_employees = mental1$no_employees, seek_help = mental1$seek_help, coworkers = mental1$coworkers, mentalillness = mental1$treatment)
+
+#View(mental)
+```
+
+
+###Visualizations
+```{r}
+#The distribution of age
+
+ggplot(data = mental, mapping = aes(x= age)) +
+  geom_histogram(color = "Red") + 
+  xlim(5,70)
+
+```
+
+
+```{r}
+#Distribution of mental illness with age
+
+ggplot(data = mental, mapping = aes(x= age, fill = mentalillness)) +
+  geom_bar(position = "dodge") + 
+  xlim(15,50)
+
+```
+
+
+```{r}
+#Dsitribution of mental illness according to gender
+
+ggplot(data = mental, mapping = aes(x = mentalillness, fill = gender)) +
+  geom_bar(position = "dodge") 
+#  xlim(20,50)
+
+#Group vars???
+```
+
+
+```{r}
+#Dsitribution of mental illness according to family history
+
+ggplot(data = mental, mapping = aes(x = mentalillness, fill = family_history)) +
+  geom_bar(position = "dodge") 
+#  xlim(20,50)
+
+```
+
+
+```{r}
+#Dsitribution of mental illness according to number of employees
+
+ggplot(data = mental, mapping = aes(x = mentalillness, fill = no_employees)) +
+  geom_bar(position = "dodge")
+#  xlim(20,50)
+
+#no_employees>large/small???
+```
+
+
+```{r}
+#Dsitribution of mental illness according to seeking help
+
+ggplot(data = mental, mapping = aes(x = mentalillness, fill = seek_help)) +
+  geom_bar(position = "dodge") 
+#  xlim(20,50)
+
+#revome don't know???
+
+```
+
+
+```{r}
+#Dsitribution of mental illness according to co-workers
+
+ggplot(data = mental, mapping = aes(x = mentalillness, fill = coworkers)) +
+  geom_bar(position = "dodge")
+#  xlim(20,50)
+
+```
+
+
+##Testing:
+
+```{r}
+#Cleaning the data and choosing only males and females from the gender variable out of numerous variables
+
+cleaned_data <- mental %>%
+  mutate(gender = ifelse(gender == "male", "male", ifelse(gender == "female", "female", ifelse(gender == "Male", "male", ifelse(gender == "Female", "female", NA)))))
+
+na.omit(cleaned_data)
+#head(cleaned_data)
+
+#giving male the value of 1 and female a value of 0
+cleaned_data <- cleaned_data %>%
+  mutate(gender = (gender == "male") * 1)
+
+#giving people having mental illness a value of 1
+cleaned_data <- cleaned_data %>%
+     mutate(mentalillness = (mentalillness == "Yes") * 1)
+#View(cleaned_data)
+
+#Prediction applying logistic regression model to find the significance
+
+# fit <- glm(mentalillness ~ age + gender + family_history + no_employees + seek_help + co_workers)
+# summary(fit)
+
+#model of mentalillness w.r. to age
+#mentalIllness <- 0.398 + 0.0030 * Age
+fit <- glm(mentalillness~ age, data = na.omit(cleaned_data))
+summary(fit)
+View(cleaned_data)
+#from the observation, I can say that there's a significance.
+
+########
+fit <- glm(mentalillness~ age + gender + family_history + no_employees + seek_help + coworkers, data = na.omit(cleaned_data))
+summary(fit)
+View(cleaned_data)
+########
+
+######
+fit <- glm(mentalillness~ age + gender + family_history + seek_help + coworkers, data = na.omit(cleaned_data))
+summary(fit)
+View(cleaned_data)
+######
+
+#model of mentalillness w.r. to gender
+fit <- glm(mentalillness~ gender, data = na.omit(cleaned_data))
+summary(fit)
+#from the observation, I can say that there's a significance.
+
+##model of mentalillness w.r. to family_history
+fit <- glm(mentalillness~ family_history, data = na.omit(cleaned_data))
+summary(fit)
+#From the observation, I can say that there's a significance.
+
+##model of mentalillness w.r. to no_employees
+fit <- glm(mentalillness~ no_employees, data = na.omit(cleaned_data))
+summary(fit)
+#From the observation, I can say that there's a significance(group between 6-25) model of mentalillness w.r. to seek_help
+fit <- glm(mentalillness~ seek_help, data = na.omit(cleaned_data))
+summary(fit)
+# From the observation, I can say that there's not a significance.
+
+#model of mentalillness w.r. to co_workers
+fit <- glm(mentalillness~ coworkers, data = na.omit(cleaned_data))
+summary(fit)
+#From the observation, I can say that there's a significance.
+
+
+```
+
+##Conclusion:
+
+
+From the graphs and plots and the prediction, I can conclude that variables like age, gender, family_history, no_employees and co-workers affect the mentall illness of the people at tech industry wheareas the variable seek_help is not significant and does not affect the people at all.
+
+
+
